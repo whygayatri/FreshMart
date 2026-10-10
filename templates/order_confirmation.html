@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Order Confirmed #{{ order.id }} - FreshMart Grocery{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 720px; padding-top: 3rem;">
+  
+  <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 2.5rem; box-shadow: var(--shadow-md); text-align: center;">
+    
+    <!-- Success Celebration Icon -->
+    <div style="width: 72px; height: 72px; background: var(--primary-light); color: var(--primary-dark); border-radius: var(--radius-full); display: inline-flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 1.25rem;">
+      ✅
+    </div>
+
+    <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem;">
+      Order Placed Successfully!
+    </h1>
+    <p style="color: var(--text-muted); font-size: 1rem; margin-bottom: 1.75rem;">
+      Thank you for shopping with FreshMart! Your groceries are currently being handpicked at our local micro-fulfillment center.
+    </p>
+
+    <!-- Order Meta Pill -->
+    <div style="display: inline-flex; align-items: center; gap: 1.5rem; background: var(--bg-page); border: 1px solid var(--border-color); border-radius: var(--radius-full); padding: 0.6rem 1.5rem; font-size: 0.9rem; margin-bottom: 2rem;">
+      <div><strong>Order ID:</strong> #{{ order.id }}</div>
+      <div><strong>Status:</strong> <span class="badge badge-in-stock">{{ order.order_status }}</span></div>
+      <div><strong>Date:</strong> {{ order.created_at.strftime('%d %b %Y, %I:%M %p') }}</div>
+    </div>
+
+    <!-- Itemized Receipt -->
+    <div style="text-align: left; border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 2rem;">
+      <div style="background: #f8fafc; padding: 0.85rem 1.25rem; font-weight: 700; font-size: 0.9rem; border-bottom: 1px solid var(--border-color);">
+        Receipt Summary
+      </div>
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+        <tbody>
+          {% for item in order.items %}
+            <tr style="border-bottom: 1px solid var(--border-color);">
+              <td style="padding: 0.85rem 1.25rem;">
+                <strong>{{ item.product_name }}</strong>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">
+                  Qty: {{ item.quantity }} &times; ₹{{ "%.2f"|format(item.unit_price) }}
+                </div>
+              </td>
+              <td style="padding: 0.85rem 1.25rem; text-align: right; font-weight: 700; color: var(--text-main);">
+                ₹{{ "%.2f"|format(item.line_subtotal) }}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr style="background: var(--primary-light);">
+            <td style="padding: 1rem 1.25rem; font-weight: 800; font-size: 1.05rem; color: var(--primary-darker);">
+              Total Amount Paid / Payable
+            </td>
+            <td style="padding: 1rem 1.25rem; text-align: right; font-weight: 800; font-size: 1.25rem; color: var(--primary-darker);">
+              ₹{{ "%.2f"|format(order.total_amount) }}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- Action Buttons -->
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+      <a href="/" class="btn btn-primary btn-lg">
+        Continue Shopping
+      </a>
+      <a href="/orders" class="btn btn-outline btn-lg">
+        View Order History
+      </a>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

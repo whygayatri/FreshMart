@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - FreshMart Grocery Inventory Management{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem;">
+
+  <!-- Dashboard Page Header -->
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <h1 style="font-size: 2rem; font-weight: 800;">Inventory Management Dashboard</h1>
+      <p style="color: var(--text-muted); font-size: 0.95rem;">Monitor grocery inventory, adjust pricing, stock quantities, and track store performance</p>
+    </div>
+    <div>
+      <button class="btn btn-primary btn-lg" id="addProductBtn">
+        + Add New Product
+      </button>
+    </div>
+  </div>
+
+  <!-- Business Metrics & Inventory Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">📦</div>
+      <div>
+        <div class="stat-number" id="statTotalProducts">{{ stats.total_products }}</div>
+        <div class="stat-label">Total Inventory Products</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" style="background: #e0f2fe; color: #0284c7;">👥</div>
+      <div>
+        <div class="stat-number" id="statTotalCustomers">{{ stats.total_customers }}</div>
+        <div class="stat-label">Registered Customers</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" style="background: #fef3c7; color: #d97706;">🛒</div>
+      <div>
+        <div class="stat-number" id="statTotalOrders">{{ stats.total_orders }}</div>
+        <div class="stat-label">Total Orders Placed</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" style="background: #ecfdf5; color: #059669;">💰</div>
+      <div>
+        <div class="stat-number" id="statTotalRevenue">₹{{ "%.2f"|format(stats.total_revenue) }}</div>
+        <div class="stat-label">Gross Revenue</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" style="background: #fee2e2; color: #dc2626;">⚠️</div>
+      <div>
+        <div class="stat-number" id="statLowStock" style="color: var(--danger);">{{ stats.low_stock_count }}</div>
+        <div class="stat-label">Low Stock Alerts (&le; 5 units)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Management Data Table Card -->
+  <div class="data-table-card">
+    
+    <!-- Table Toolbar: Search & Category Filter -->
+    <div class="table-toolbar">
+      <div style="display: flex; gap: 1rem; align-items: center; flex: 1; max-width: 600px;">
+        <input type="text"
+               id="adminProductSearch"
+               class="form-control"
+               placeholder="Search product inventory by name or keyword...">
+
+        <select id="adminCategoryFilter" class="form-control" style="max-width: 220px;">
+          <option value="All">All Categories</option>
+          {% for cat in categories %}
+            <option value="{{ cat }}">{{ cat }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <!-- Inventory Table -->
+    <div style="overflow-x: auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 70px;">ID</th>
+            <th style="width: 60px;">Image</th>
+            <th>Product Name</th>
+            <th>Category</th>
+            <th>Price (INR)</th>
+            <th>Stock Status</th>
+            <th style="width: 170px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="adminProductsTableBody">
+          {% for p in products %}
+            <tr id="admin-row-{{ p.id }}">
+              <td><strong>#{{ p.id }}</strong></td>
+              <td>
+                <img src="{{ p.image_url or '/static/images/placeholder.svg' }}"
+                     alt="{{ p.name }}"
+                     style="width: 44px; height: 44px; border-radius: var(--radius-sm); object-fit: cover;"
+                     onerror="this.src='/static/images/placeholder.svg';">
+              </td>
+              <td>
+                <div style="font-weight: 700; color: var(--text-main);">{{ p.name }}</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">{{ p.description[:50] ~ '...' if p.description and p.description|length > 50 else (p.description or '') }}</div>
+              </td>
+              <td>
+                <span class="badge" style="background:#e0f2fe; color:#0369a1;">{{ p.category }}</span>
+              </td>
+              <td style="font-weight: 800; color: var(--primary-darker);">
+                ₹{{ "%.2f"|format(p.price) }}
+              </td>
+              <td>
+                <span class="badge {% if p.stock_quantity <= 0 %}badge-out-of-stock{% elif p.stock_quantity <= 5 %}badge-low-stock{% else %}badge-in-stock{% endif %}">
+                  {{ p.stock_quantity }} units
+                </span>
+              </td>
+              <td>
+                <div style="display: flex; gap: 0.5rem;">
+                  <button type="button" class="btn btn-sm btn-outline btn-edit-product" data-id="{{ p.id }}">
+                    ✏️ Edit
+                  </button>
+                  <button type="button" class="btn btn-sm btn-danger-outline btn-delete-product" data-id="{{ p.id }}" data-name="{{ p.name }}">
+                    🗑️ Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Add / Edit Product Modal -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modalTitle">Add New Grocery Product</h3>
+      <button type="button" class="modal-close close-modal">&times;</button>
+    </div>
+
+    <form id="productForm">
+      <div class="modal-body">
+        <input type="hidden" id="productIdInput">
+
+        <div id="productFormError" class="badge badge-out-of-stock" style="display: none; width: 100%; padding: 0.75rem; margin-bottom: 1.25rem; text-align: center; border-radius: var(--radius-md); font-size: 0.85rem;">
+        </div>
+
+        <div class="form-group">
+          <label for="productNameInput" class="form-label">Product Name *</label>
+          <input type="text" id="productNameInput" class="form-control" placeholder="e.g. Fresh Alphonso Mangoes (1 Dozen)" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label for="productPriceInput" class="form-label">Price in INR (₹) *</label>
+            <input type="number" id="productPriceInput" class="form-control" step="0.01" min="0.01" placeholder="180.00" required>
+          </div>
+          <div class="form-group">
+            <label for="productStockInput" class="form-label">Available Stock Quantity *</label>
+            <input type="number" id="productStockInput" class="form-control" min="0" step="1" placeholder="50" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="productCategoryInput" class="form-label">Category *</label>
+          <select id="productCategoryInput" class="form-control" required>
+            {% for cat in categories %}
+              <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="productImageInput" class="form-label">Product Image URL (Optional)</label>
+          <input type="url" id="productImageInput" class="form-control" placeholder="https://images.unsplash.com/...">
+          <p class="form-text">Must start with http://, https://, or /static/</p>
+        </div>
+
+        <div class="form-group">
+          <label for="productDescInput" class="form-label">Description (Optional)</label>
+          <textarea id="productDescInput" class="form-control" rows="3" placeholder="Provide fresh quality highlights, origin, or dietary details"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline close-modal">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="saveProductBtn">Save Product</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/admin.js"></script>
+{% endblock %}

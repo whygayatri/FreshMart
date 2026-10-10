@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Administrator Sign In - FreshMart Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="auth-wrapper" style="border-top: 4px solid var(--primary);">
+    <div class="auth-header">
+      <div class="auth-icon" style="background: #e0f2fe; color: #0284c7;">🛡️</div>
+      <h1 class="auth-title">Admin Portal</h1>
+      <p class="auth-subtitle">Authorized grocery store management access only</p>
+    </div>
+
+    <!-- Security Information Alert -->
+    <div style="background: #f0fdf4; border: 1px solid var(--primary-border); border-radius: var(--radius-md); padding: 0.85rem 1rem; margin-bottom: 1.5rem; font-size: 0.85rem; color: var(--primary-darker);">
+      <strong>Demo Environment Credentials:</strong><br>
+      Username: <code style="background: #fff; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: bold;">admin</code><br>
+      Password: <code style="background: #fff; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: bold;">Admin@12345</code>
+    </div>
+
+    <div id="adminLoginError" class="badge badge-out-of-stock" style="display: none; width: 100%; padding: 0.75rem; margin-bottom: 1.25rem; text-align: center; border-radius: var(--radius-md); font-size: 0.85rem;">
+    </div>
+
+    <form id="adminLoginForm">
+      <div class="form-group">
+        <label for="adminUsername" class="form-label">Administrator Username or Email</label>
+        <input type="text" id="adminUsername" class="form-control" placeholder="admin" required autofocus>
+      </div>
+
+      <div class="form-group">
+        <label for="adminPassword" class="form-label">Administrator Password</label>
+        <input type="password" id="adminPassword" class="form-control" placeholder="Enter administrator password" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: 1.5rem;">
+        Sign In to Admin Portal
+      </button>
+    </form>
+
+    <div style="text-align: center; margin-top: 1.75rem; font-size: 0.85rem; color: var(--text-muted);">
+      <a href="/" style="color: var(--text-muted);">&larr; Return to Customer Storefront</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

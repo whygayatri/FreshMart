@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account - FreshMart Grocery{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="auth-wrapper">
+    <div class="auth-header">
+      <div class="auth-icon">🥬</div>
+      <h1 class="auth-title">Create Account</h1>
+      <p class="auth-subtitle">Register to shop farm-fresh groceries & save favorites</p>
+    </div>
+
+    <div id="registerError" class="badge badge-out-of-stock" style="display: none; width: 100%; padding: 0.75rem; margin-bottom: 1.25rem; text-align: center; border-radius: var(--radius-md); font-size: 0.85rem;">
+    </div>
+
+    <form id="registerForm">
+      <div class="form-group">
+        <label for="fullName" class="form-label">Full Name</label>
+        <input type="text" id="fullName" class="form-control" placeholder="e.g. Priya Sharma" required autofocus>
+      </div>
+
+      <div class="form-group">
+        <label for="email" class="form-label">Email Address</label>
+        <input type="email" id="email" class="form-control" placeholder="priya@example.com" required>
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" id="password" class="form-control" placeholder="At least 6 characters" minlength="6" required>
+        <p class="form-text">Must be at least 6 characters long.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword" class="form-label">Confirm Password</label>
+        <input type="password" id="confirmPassword" class="form-control" placeholder="Re-enter your password" minlength="6" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: 1.5rem;">
+        Create Account
+      </button>
+    </form>
+
+    <div style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+      Already have an account?
+      <a href="/login" style="font-weight: 700; color: var(--primary-dark);">Sign In here</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

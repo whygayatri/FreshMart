@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}FreshMart - Fresh Groceries Delivered To Your Doorstep{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-badge">
+          <span>🌿</span> 100% Farm Fresh & Pure
+        </div>
+        <h1 class="hero-title">
+          Fresh Groceries <br>
+          Delivered in <span>15 Minutes</span>
+        </h1>
+        <p class="hero-subtitle">
+          Shop daily essentials, farm-fresh seasonal fruits, crisp greens, dairy products, and household favorites at everyday low prices.
+        </p>
+        <div class="hero-perks">
+          <div class="perk-item">
+            <span>⚡</span> Express 15-Min Delivery
+          </div>
+          <div class="perk-item">
+            <span>🛡️</span> 100% Quality Guaranteed
+          </div>
+          <div class="perk-item">
+            <span>💵</span> Cash & UPI on Delivery
+          </div>
+        </div>
+      </div>
+      <div style="text-align: center;">
+        <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=700&auto=format&fit=crop&q=80"
+             alt="Fresh Grocery Basket"
+             style="max-width: 100%; height: auto; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);"
+             onerror="this.src='/static/images/placeholder.svg';">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Store Catalog Section -->
+<div class="container">
+
+  <!-- Category Filter Chips -->
+  <div class="categories-bar" id="categoryChips">
+    <button class="category-chip {% if not request.query_params.get('category') or request.query_params.get('category') == 'All' %}active{% endif %}" data-category="All">
+      All Groceries
+    </button>
+    {% for cat in categories %}
+      <button class="category-chip {% if request.query_params.get('category') == cat %}active{% endif %}" data-category="{{ cat }}">
+        {{ cat }}
+      </button>
+    {% endfor %}
+  </div>
+
+  <!-- Catalog Toolbar -->
+  <div class="catalog-header">
+    <div>
+      <h2 class="catalog-title" id="catalogHeading">
+        {% if request.query_params.get('category') and request.query_params.get('category') != 'All' %}
+          {{ request.query_params.get('category') }}
+        {% elif request.query_params.get('search') %}
+          Search Results for "{{ request.query_params.get('search') }}"
+        {% else %}
+          Featured Groceries
+        {% endif %}
+      </h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem;" id="catalogSubtitle">
+        Showing {{ total_products }} fresh products
+      </p>
+    </div>
+
+    <div>
+      <select class="sort-select" id="sortSelect">
+        <option value="newest" selected>Sort: Newest First</option>
+        <option value="price_asc">Price: Low to High</option>
+        <option value="price_desc">Price: High to Low</option>
+        <option value="name_asc">Name: A to Z</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Product Grid -->
+  <div class="product-grid" id="productGrid">
+    {% for product in products %}
+      <div class="product-card" data-product-id="{{ product.id }}">
+        <div class="product-img-wrap">
+          {% if product.stock_quantity <= 0 %}
+            <span class="badge badge-stock badge-out-of-stock">Out of Stock</span>
+          {% elif product.stock_quantity <= 5 %}
+            <span class="badge badge-stock badge-low-stock">Only {{ product.stock_quantity }} Left</span>
+          {% else %}
+            <span class="badge badge-stock badge-in-stock">In Stock</span>
+          {% endif %}
+
+          <img src="{{ product.image_url or '/static/images/placeholder.svg' }}"
+               alt="{{ product.name }}"
+               class="product-img"
+               loading="lazy"
+               onerror="this.src='/static/images/placeholder.svg';">
+        </div>
+
+        <div class="product-body">
+          <div class="product-category-tag">{{ product.category }}</div>
+          <h3 class="product-name">{{ product.name }}</h3>
+          <p class="product-desc">{{ product.description or 'Premium quality grocery essential, guaranteed fresh and authentic.' }}</p>
+
+          <div class="product-footer">
+            <div class="product-price">₹{{ "%.2f"|format(product.price) }}</div>
+            <button class="btn-add-cart"
+                    data-product-id="{{ product.id }}"
+                    onclick="handleAddToCart('{{ product.id }}', this)"
+                    {% if product.stock_quantity <= 0 %}disabled{% endif %}>
+              {% if product.stock_quantity <= 0 %}
+                Sold Out
+              {% else %}
+                + Add to Cart
+              {% endif %}
+            </button>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="empty-state" style="grid-column: 1 / -1;">
+        <div class="empty-state-icon">🛒</div>
+        <h3 class="empty-state-title">No products found</h3>
+        <p class="empty-state-text">We couldn't find any groceries matching your selection. Try clearing filters or searching for something else.</p>
+        <a href="/" class="btn btn-primary">Browse All Groceries</a>
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const categoryChips = document.querySelectorAll('.category-chip');
+  const sortSelect = document.getElementById('sortSelect');
+  const productGrid = document.getElementById('productGrid');
+  const catalogHeading = document.getElementById('catalogHeading');
+  const catalogSubtitle = document.getElementById('catalogSubtitle');
+
+  let activeCategory = new URLSearchParams(window.location.search).get('category') || 'All';
+  let activeSearch = new URLSearchParams(window.location.search).get('search') || '';
+
+  categoryChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      categoryChips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeCategory = chip.dataset.category;
+      activeSearch = ''; // Clear search when picking category
+      fetchAndRenderProducts();
+    });
+  });
+
+  if (sortSelect) {
+    sortSelect.addEventListener('change', () => {
+      fetchAndRenderProducts();
+    });
+  }
+
+  async function fetchAndRenderProducts() {
+    productGrid.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+        <p style="color: var(--text-muted); font-size: 1.1rem;">Refreshing fresh products...</p>
+      </div>
+    `;
+
+    let url = `/api/products?limit=50&sort_by=${sortSelect.value}`;
+    if (activeCategory && activeCategory !== 'All') {
+      url += `&category=${encodeURIComponent(activeCategory)}`;
+    }
+    if (activeSearch) {
+      url += `&search=${encodeURIComponent(activeSearch)}`;
+    }
+
+    try {
+      const data = await apiFetch(url);
+
+      if (catalogHeading) {
+        if (activeSearch) {
+          catalogHeading.textContent = `Search Results for "${activeSearch}"`;
+        } else if (activeCategory !== 'All') {
+          catalogHeading.textContent = activeCategory;
+        } else {
+          catalogHeading.textContent = 'All Groceries';
+        }
+      }
+
+      if (catalogSubtitle) {
+        catalogSubtitle.textContent = `Showing ${data.total} fresh products`;
+      }
+
+      if (data.products.length === 0) {
+        productGrid.innerHTML = `
+          <div class="empty-state" style="grid-column: 1 / -1;">
+            <div class="empty-state-icon">🛒</div>
+            <h3 class="empty-state-title">No products found</h3>
+            <p class="empty-state-text">Try searching for other groceries or browse a different category.</p>
+            <button class="btn btn-primary" onclick="resetFilters()">View All Products</button>
+          </div>
+        `;
+        return;
+      }
+
+      productGrid.innerHTML = data.products.map(p => {
+        const isOutOfStock = p.stock_quantity <= 0;
+        const isLowStock = p.stock_quantity > 0 && p.stock_quantity <= 5;
+        const stockBadge = isOutOfStock
+          ? `<span class="badge badge-stock badge-out-of-stock">Out of Stock</span>`
+          : isLowStock
+          ? `<span class="badge badge-stock badge-low-stock">Only ${p.stock_quantity} Left</span>`
+          : `<span class="badge badge-stock badge-in-stock">In Stock</span>`;
+
+        const btnText = isOutOfStock ? 'Sold Out' : '+ Add to Cart';
+        const disabledAttr = isOutOfStock ? 'disabled' : '';
+
+        return `
+          <div class="product-card" data-product-id="${p.id}">
+            <div class="product-img-wrap">
+              ${stockBadge}
+              <img src="${p.image_url || '/static/images/placeholder.svg'}"
+                   alt="${p.name}"
+                   class="product-img"
+                   loading="lazy"
+                   onerror="this.src='/static/images/placeholder.svg';">
+            </div>
+            <div class="product-body">
+              <div class="product-category-tag">${p.category}</div>
+              <h3 class="product-name">${p.name}</h3>
+              <p class="product-desc">${p.description || 'Premium quality grocery essential, guaranteed fresh and authentic.'}</p>
+              <div class="product-footer">
+                <div class="product-price">${formatINR(p.price)}</div>
+                <button class="btn-add-cart"
+                        data-product-id="${p.id}"
+                        onclick="handleAddToCart('${p.id}', this)"
+                        ${disabledAttr}>
+                  ${btnText}
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      showToast('Could not load products.', 'error');
+    }
+  }
+
+  window.resetFilters = function() {
+    activeCategory = 'All';
+    activeSearch = '';
+    categoryChips.forEach(c => c.classList.remove('active'));
+    categoryChips[0].classList.add('active');
+    fetchAndRenderProducts();
+  };
+});
+</script>
+{% endblock %}

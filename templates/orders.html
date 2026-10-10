@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}My Order History - FreshMart Grocery{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem;">
+  <div style="margin-bottom: 2rem;">
+    <h1 style="font-size: 2rem; font-weight: 800;">My Order History</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">Track past grocery orders, itemized receipts, and dates</p>
+  </div>
+
+  {% if orders and orders|length > 0 %}
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+      {% for order in orders %}
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm);">
+          
+          <!-- Order Card Header -->
+          <div style="background: #f8fafc; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+              <div>
+                <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Order ID</span>
+                <div style="font-weight: 800; color: var(--text-main);">#{{ order.id }}</div>
+              </div>
+              <div>
+                <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Date Placed</span>
+                <div style="font-weight: 600;">{{ order.created_at.strftime('%d %b %Y, %I:%M %p') }}</div>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+              <div>
+                <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Total Amount</span>
+                <div style="font-weight: 800; color: var(--primary-darker); font-size: 1.1rem;">
+                  ₹{{ "%.2f"|format(order.total_amount) }}
+                </div>
+              </div>
+              <div>
+                <span class="badge badge-in-stock">{{ order.order_status }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Order Items Breakdown -->
+          <div style="padding: 1.25rem 1.5rem;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted); text-align: left;">
+                  <th style="padding-bottom: 0.5rem;">Grocery Item (Snapshot)</th>
+                  <th style="padding-bottom: 0.5rem;">Unit Price</th>
+                  <th style="padding-bottom: 0.5rem;">Quantity</th>
+                  <th style="padding-bottom: 0.5rem; text-align: right;">Line Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in order.items %}
+                  <tr style="border-bottom: 1px dashed var(--border-color);">
+                    <td style="padding: 0.75rem 0; font-weight: 600; color: var(--text-main);">
+                      {{ item.product_name }}
+                    </td>
+                    <td style="padding: 0.75rem 0;">₹{{ "%.2f"|format(item.unit_price) }}</td>
+                    <td style="padding: 0.75rem 0;">{{ item.quantity }}</td>
+                    <td style="padding: 0.75rem 0; text-align: right; font-weight: 700; color: var(--text-main);">
+                      ₹{{ "%.2f"|format(item.line_subtotal) }}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state" style="max-width: 600px; margin: 3rem auto;">
+      <div class="empty-state-icon">📦</div>
+      <h2 class="empty-state-title">No orders yet</h2>
+      <p class="empty-state-text">
+        You haven't placed any grocery orders yet. Explore our fresh inventory and place your first order today!
+      </p>
+      <a href="/" class="btn btn-primary btn-lg">Browse Groceries</a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

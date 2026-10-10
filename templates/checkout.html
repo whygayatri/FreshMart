@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout - FreshMart Grocery{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem;">
+  <div style="margin-bottom: 2rem;">
+    <h1 style="font-size: 2rem; font-weight: 800;">Checkout & Delivery</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">Confirm delivery address and place your order</p>
+  </div>
+
+  <div id="checkoutError" class="badge badge-out-of-stock" style="display: none; width: 100%; padding: 0.85rem; margin-bottom: 1.5rem; text-align: center; border-radius: var(--radius-md); font-size: 0.95rem;">
+  </div>
+
+  <div class="cart-layout">
+    
+    <!-- Delivery Address & Payment Form -->
+    <div class="cart-table-card">
+      <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+        📍 Delivery Address & Contact
+      </h3>
+
+      <form id="checkoutForm">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label for="shippingName" class="form-label">Recipient Name</label>
+            <input type="text" id="shippingName" class="form-control" value="{{ user.full_name }}" required>
+          </div>
+          <div class="form-group">
+            <label for="shippingPhone" class="form-label">Phone Number</label>
+            <input type="tel" id="shippingPhone" class="form-control" placeholder="+91 98765 43210" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="shippingAddress" class="form-label">Complete Street Address</label>
+          <textarea id="shippingAddress" class="form-control" rows="3" placeholder="Apartment, building, street, landmark, pincode" required>Flat 402, Green Valley Apartments, MG Road, Bengaluru - 560001</textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Preferred Delivery Slot</label>
+          <select class="form-control" id="deliverySlot">
+            <option selected>⚡ Immediate Express Delivery (Within 15-30 Mins)</option>
+            <option>🌅 Morning Slot (7:00 AM - 9:00 AM)</option>
+            <option>🌆 Evening Slot (5:00 PM - 8:00 PM)</option>
+          </select>
+        </div>
+
+        <h3 style="font-size: 1.25rem; font-weight: 800; margin: 1.75rem 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+          💳 Payment Method
+        </h3>
+
+        <div style="background: var(--primary-light); border: 1px solid var(--primary-border); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.75rem;">
+          <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; font-weight: 700; color: var(--primary-darker);">
+            <input type="radio" name="payment_method" value="cod" checked style="accent-color: var(--primary);">
+            <span>Cash on Delivery / UPI on Delivery (GPay / PhonePe / Paytm)</span>
+          </label>
+          <p style="margin-top: 0.35rem; font-size: 0.85rem; color: var(--text-muted); padding-left: 1.8rem;">
+            Pay seamlessly via Cash or scan the delivery agent's QR code when your fresh groceries arrive.
+          </p>
+        </div>
+
+        <button type="submit" id="placeOrderBtn" class="btn btn-primary btn-block btn-lg">
+          Place Order & Pay on Delivery
+        </button>
+      </form>
+    </div>
+
+    <!-- Items Snapshot & Order Summary -->
+    <div class="summary-card">
+      <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.25rem;">Items in Order ({{ total_items }})</h3>
+
+      <div style="max-height: 280px; overflow-y: auto; margin-bottom: 1.25rem; padding-right: 0.5rem;">
+        {% for item in cart_items %}
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px dashed var(--border-color);">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <img src="{{ item.image_url or '/static/images/placeholder.svg' }}"
+                   alt="{{ item.product_name }}"
+                   style="width: 40px; height: 40px; border-radius: var(--radius-sm); object-fit: cover;"
+                   onerror="this.src='/static/images/placeholder.svg';">
+              <div>
+                <div style="font-size: 0.9rem; font-weight: 700; color: var(--text-main);">{{ item.product_name }}</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">Qty: {{ item.quantity }} &times; ₹{{ "%.2f"|format(item.unit_price) }}</div>
+              </div>
+            </div>
+            <div style="font-weight: 700; color: var(--text-main);">
+              ₹{{ "%.2f"|format(item.line_subtotal) }}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="summary-row">
+        <span style="color: var(--text-muted);">Cart Subtotal</span>
+        <span style="font-weight: 700;">₹{{ "%.2f"|format(total_amount) }}</span>
+      </div>
+      <div class="summary-row">
+        <span style="color: var(--text-muted);">Delivery Fee</span>
+        <span style="color: var(--primary-dark); font-weight: 700;">FREE</span>
+      </div>
+
+      <div class="summary-row summary-total">
+        <span>Amount Payable</span>
+        <span>₹{{ "%.2f"|format(total_amount) }}</span>
+      </div>
+
+      <div style="margin-top: 1.5rem;">
+        <a href="/cart" class="btn btn-outline btn-block btn-sm">
+          &larr; Modify Cart
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/cart.js"></script>
+{% endblock %}
